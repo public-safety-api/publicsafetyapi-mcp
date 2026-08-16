@@ -1,5 +1,8 @@
 # publicsafetyapi-mcp
 
+<!-- Links this package to its entry in the official MCP registry -->
+mcp-name: dev.publicsafetyapi/publicsafetyapi-mcp
+
 MCP server for [publicsafetyapi.dev](https://publicsafetyapi.dev) — US police stations, fire departments, EMS bases, and hospitals for AI agents.
 
 Expose public safety facility lookups as tools to any MCP-compatible AI assistant (Claude, Cursor, Copilot, etc.). Built on federal HIFLD, USFA, and CMS data — public domain, commercially usable.
