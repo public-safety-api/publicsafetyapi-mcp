@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "publicsafetyapi-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for publicsafetyapi.dev — US police, fire, EMS & hospital data for AI agents"
 readme = "README.md"
 license = { text = "MIT" }
@@ -12,7 +12,7 @@ authors = [{ name = "PublicSafetyAPI", email = "hello@districtapi.dev" }]
 requires-python = ">=3.10"
 keywords = ["mcp", "public-safety", "fire", "police", "ems", "hospital", "hifld", "api"]
 dependencies = [
-    "mcp>=1.0.0",
+    "mcp>=1.0.0,<2.0.0",
     "httpx>=0.27.0",
 ]
 
