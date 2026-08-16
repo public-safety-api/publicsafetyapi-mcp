@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.publicsafetyapi/publicsafetyapi-mcp",
+  "title": "PublicSafetyAPI",
+  "description": "US police, fire, EMS and hospital locations near any address, from federal HIFLD data",
+  "version": "0.1.1",
+  "websiteUrl": "https://publicsafetyapi.dev",
+  "repository": {
+    "url": "https://github.com/public-safety-api/publicsafetyapi-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "publicsafetyapi-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PUBLICSAFETYAPI_KEY",
+          "description": "API key from https://publicsafetyapi.dev (free tier: 500 requests/month)",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
