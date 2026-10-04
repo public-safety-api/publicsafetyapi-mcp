@@ -23,8 +23,9 @@ mcp = FastMCP(
         "fire stations/departments, EMS bases, and hospitals. Data comes from federal "
         "HIFLD, USFA, and CMS sources. The most useful tool is "
         "find_stations_near_address — pass any US street address to find the nearest "
-        "facilities. Use get_jurisdiction to determine which city and county contain "
-        "a location, which is useful for routing or coverage questions."
+        "facilities. Use get_jurisdiction to find which Census place (city/town, "
+        "tribal area, or county if unincorporated) contains a location and which "
+        "agencies of one type likely serve it — useful for routing or coverage questions."
     ),
 )
 
@@ -85,10 +86,10 @@ def find_stations_near_address(
     sorted by distance.
 
     Args:
-        address:      Full US street address, e.g. "350 Fifth Ave, New York, NY"
+        address:      US street address or "City, ST", e.g. "350 Fifth Ave, New York, NY"
         type:         Optional filter — "fire", "police", "ems", or "hospital".
                       Comma-separate for several; omit to return all types.
-        radius_miles: Search radius in miles (0.1–50, default 10)
+        radius_miles: Search radius in miles (greater than 0, max 50, default 10)
         limit:        Maximum facilities to return (1–25, default 5)
     """
     params: dict = {"address": address, "radius_miles": radius_miles, "limit": limit}
@@ -113,8 +114,9 @@ def find_stations_near_coordinates(
     Args:
         lat:          Latitude (WGS84)
         lng:          Longitude (WGS84)
-        type:         Optional filter — "fire", "police", "ems", or "hospital"
-        radius_miles: Search radius in miles (0.1–50, default 10)
+        type:         Optional filter — "fire", "police", "ems", or "hospital".
+                      Comma-separate for several; omit to return all types.
+        radius_miles: Search radius in miles (greater than 0, max 50, default 10)
         limit:        Maximum facilities to return (1–25, default 5)
     """
     params: dict = {"lat": lat, "lng": lng, "radius_miles": radius_miles, "limit": limit}
@@ -134,7 +136,7 @@ def get_station(station_id: str) -> dict:
     coordinates, and (for hospitals) beds, trauma level, and ownership.
 
     Args:
-        station_id: Facility ID, e.g. "fire_CA_12345"
+        station_id: Facility ID as returned by the other tools, e.g. "fire-hifld-13184"
     """
     return _get(f"/v1/stations/{_safe_id(station_id, 'station_id')}")
 
@@ -174,13 +176,21 @@ def list_stations(
 # ---------------------------------------------------------------------------
 
 @mcp.tool()
-def get_jurisdiction(address: str = "", lat: float | None = None, lng: float | None = None) -> dict:
+def get_jurisdiction(
+    address: str = "",
+    lat: float | None = None,
+    lng: float | None = None,
+    type: str = "police",
+) -> dict:
     """
-    Determine which Census-defined place (city/town) contains a location, and
-    which agencies most likely respond there. Returns the place name, state,
-    Census GEOID, boundary type, and a `likelyAgencies` list of nearby police,
-    fire, EMS, and hospital facilities. Useful for routing, coverage reporting,
-    or working out which local government and responders serve an address.
+    Determine which Census-defined place contains a location, and which agencies
+    of one type most likely serve it. The most specific boundary wins: an
+    incorporated city/town, then a tribal area, then the county (for
+    unincorporated locations). Returns placeName (the Census name, e.g.
+    "Apple Valley town"), boundaryType, state, geoid, and likelyAgencies — up to
+    10 open facilities of the requested type inside the boundary, nearest first
+    (or up to 5 within 25 miles if there are none inside it). Jurisdiction is
+    approximated from Census boundaries, not legal service areas. Costs 2 credits.
 
     Provide either an address, or a lat/lng pair.
 
@@ -188,6 +198,8 @@ def get_jurisdiction(address: str = "", lat: float | None = None, lng: float | N
         address: Full US street address (geocoded automatically)
         lat:     Latitude (WGS84) — use with lng instead of address
         lng:     Longitude (WGS84) — use with lat instead of address
+        type:    Agency type for likelyAgencies — "police" (default), "fire",
+                 "ems", or "hospital". One type per call.
     """
     if address:
         params: dict = {"address": address}
@@ -195,6 +207,7 @@ def get_jurisdiction(address: str = "", lat: float | None = None, lng: float | N
         params = {"lat": lat, "lng": lng}
     else:
         raise ValueError("Provide either an address, or both lat and lng.")
+    params["type"] = type
     return _get("/v1/jurisdiction", params=params)
 
 

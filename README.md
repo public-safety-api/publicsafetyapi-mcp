@@ -65,7 +65,7 @@ Get a free API key at [publicsafetyapi.dev](https://publicsafetyapi.dev) — 500
 | `find_stations_near_coordinates` | Same, but from a lat/lng (skips geocoding) |
 | `get_station` | Full record for one facility by ID |
 | `list_stations` | List/search facilities by type, state, name, or ZIP |
-| `get_jurisdiction` | Which city and county contain a location |
+| `get_jurisdiction` | Which city/town (or county, if unincorporated) contains a location, and which agencies of one type likely serve it |
 | `get_state_summary` | Facility counts by type for a state |
 
 Facility types: `fire`, `police`, `ems`, `hospital`.
