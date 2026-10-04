@@ -9,6 +9,7 @@ Run via uvx:
 """
 
 import os
+import re
 import httpx
 from mcp.server.fastmcp import FastMCP
 
@@ -42,6 +43,30 @@ def _get(path: str, params: dict | None = None) -> dict:
         response = client.get(path, params=params)
         response.raise_for_status()
         return response.json()
+
+
+# Identifiers below are interpolated into the outbound request path. httpx
+# resolves a path-absolute string against the base URL and collapses ".."
+# during normalisation, so an unvalidated id can redirect the request to a
+# different path on the same host while still carrying the caller's API key
+# (reported by Syed Anas Mohiuddin, Sept 2026). "?" and "#" would likewise
+# inject a query string or fragment, which that report did not cover.
+#
+# Allowlist rather than block dangerous characters: every identifier in the
+# upstream data is alphanumeric with optional "-"/"_" — verified against every
+# row (LEA ids 7 digits, school ids 12, FSCS ids 6, outlet ids 10, station ids
+# 11-19; none outside this set) — so a blocklist can only be less complete.
+_SAFE_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+def _safe_id(value: str, field: str) -> str:
+    """Return the identifier unchanged, or raise if it could escape the path."""
+    if not _SAFE_ID.match(value or ""):
+        raise ValueError(
+            f"{field} must contain only letters, digits, '-' or '_' "
+            f"(got {value!r})"
+        )
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -111,7 +136,7 @@ def get_station(station_id: str) -> dict:
     Args:
         station_id: Facility ID, e.g. "fire_CA_12345"
     """
-    return _get(f"/v1/stations/{station_id}")
+    return _get(f"/v1/stations/{_safe_id(station_id, 'station_id')}")
 
 
 @mcp.tool()
@@ -181,7 +206,7 @@ def get_state_summary(state_code: str) -> dict:
     Args:
         state_code: Two-letter state abbreviation, e.g. "CA"
     """
-    return _get(f"/v1/states/{state_code.upper()}/summary")
+    return _get(f"/v1/states/{_safe_id(state_code, 'state_code').upper()}/summary")
 
 
 # ---------------------------------------------------------------------------
